@@ -9,20 +9,28 @@ from bs4 import BeautifulSoup as BS
 class CheckFromUrl:
     @staticmethod
     def makeRequest(hash_md5):
-        req = requests.get(f'https://md5.gromweb.com/?md5={hash_md5}')
-        return req.content
+        try:
+            req = requests.get(f'https://md5.gromweb.com/?md5={hash_md5}')
+            return req.content
+        except:
+            return "Сайт не отвечает!"
 
     @staticmethod
     def parseRequest(html):
-        BSobj = BS(html, 'html.parser')
-        encodedHash = BSobj.find('em', {'class': 'long-content string'})
-        return encodedHash.text if encodedHash else None
-
+        try:
+            BSobj = BS(html, 'html.parser')
+            encodedHash = BSobj.find('em', {'class': 'long-content string'})
+            return encodedHash.text if encodedHash else None
+        except:
+            return 'Не удалось спарсить результат!'
     @staticmethod
     def CrackMd5HashOnline(hash_md5):
-        html = CheckFromUrl.makeRequest(hash_md5)
-        encodeHash = CheckFromUrl.parseRequest(html)
-        return encodeHash
+        try:
+            html = CheckFromUrl.makeRequest(hash_md5)
+            encodeHash = CheckFromUrl.parseRequest(html)
+            return encodeHash
+        except:
+            return 'Не удалось провести проверку через сайт :('
 
 
 class CheckFromFile:
@@ -39,29 +47,37 @@ class CheckFromFile:
         else:
             return None
 
+
     @classmethod
     def CrackMd5HashByDict(cls, path_dict, hash_):
-        passwords = open(path_dict, 'r').readlines()
+        try:
+            passwords = open(path_dict, 'r').readlines()
+        except Exception:
+            print(f"Файл {path_dict} не найден! ")
+            path_dict = input('Введите путь до словаря с паролями: ')
+            passwords = open(path_dict, 'r').readlines()
         passwords = map(lambda s: s.strip(), passwords)
         data = ((password, hash_) for password in passwords)
         pool = Pool(5)
         result = pool.map(cls.check_pass, data)
         for password in result:
+            print(password)
             if password:
                 return password
         return None
 
 
+    
 if __name__ == '__main__':
-    DICT_PATH = r'namesforVolodka.txt'
-
+    DICT_PATH = r'passwords.txt'
     hash_ = input('Введите MD5 hash: ').lower()
     if not re.match(r'^[\w]{32}$', hash_):
         print('Вы ввели некорректный MD5 хэш')
         exit()
 
     sitePasswordCheck = CheckFromUrl.CrackMd5HashOnline(hash_)
-    if sitePasswordCheck is None:
+    #if sitePasswordCheck is None:
+    if not sitePasswordCheck:
         print(f'Введённый Вами хэш -- {hash_} -- отсутствует в базе данных сайта. ')
         print(f'Подбираем пароль по словарю....')
         password = CheckFromFile.CrackMd5HashByDict(DICT_PATH, hash_)
