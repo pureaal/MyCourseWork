@@ -76,7 +76,6 @@ if __name__ == '__main__':
         exit()
 
     sitePasswordCheck = CheckFromUrl.CrackMd5HashOnline(hash_)
-    #if sitePasswordCheck is None:
     if not sitePasswordCheck:
         print(f'Введённый Вами хэш -- {hash_} -- отсутствует в базе данных сайта. ')
         print(f'Подбираем пароль по словарю....')
@@ -87,3 +86,9 @@ if __name__ == '__main__':
             print(f'Пароль не найден :(')
     else:
         print(f'Проверка через сайт. Для хэша: {hash_} подходит пароль: {sitePasswordCheck}')
+
+
+
+
+
+
